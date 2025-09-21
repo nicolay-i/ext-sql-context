@@ -1,54 +1,248 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="{{csp}}" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SQL Context Settings</title>
   <style nonce="{{nonce}}">
-    :root { color-scheme: light dark; }
-    body { font-family: var(--vscode-font-family); padding: 12px 16px; color: var(--vscode-foreground); background: var(--vscode-editor-background); }
-    h2 { margin: 0 0 12px; font-weight: 600; }
-    .row { display: flex; gap: 12px; }
-    .col { flex: 1; }
-    label { display: block; font-size: 12px; opacity: .9; margin-top: 10px; }
-    input[type="text"], input[type="number"], input[type="password"], select, textarea {
-      width: 100%; box-sizing: border-box; padding: 6px 8px;
+    :root {
+      color-scheme: light dark;
+    }
+
+    body {
+      font-family: var(--vscode-font-family);
+      padding: 12px 16px;
+      color: var(--vscode-foreground);
+      background: var(--vscode-editor-background);
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-weight: 600;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .col {
+      flex: 1;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      opacity: .9;
+      margin-top: 10px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="password"],
+    select,
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 6px 8px;
       background: var(--vscode-input-background);
       color: var(--vscode-input-foreground);
       border: 1px solid var(--vscode-input-border, transparent);
       border-radius: 4px;
       outline: none;
     }
-    input:focus, select:focus, textarea:focus { border-color: var(--vscode-focusBorder); }
-    textarea { min-height: 80px; font-family: var(--vscode-editor-font-family); }
-    .actions { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
-  button { padding: 6px 10px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 4px; cursor: pointer; }
-  /* Primary button hover */
-  button:not(.button-secondary):hover { background: var(--vscode-button-hoverBackground); }
-  /* Secondary button base + hover with proper contrasting colors */
-  .button-secondary { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); }
-  .button-secondary:hover { background: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-secondaryBackground)); color: var(--vscode-button-secondaryForeground); }
-    .hint { font-size: 12px; opacity: .8; margin-top: 6px; }
-    .section { border: 1px solid var(--vscode-widget-border, var(--vscode-input-border, transparent)); padding: 12px; border-radius: 6px; margin-bottom: 12px; }
-    .hidden { display: none; }
-    .ssl { margin-top: 8px; }
-    .status { margin-top: 8px; font-size: 12px; }
-    .status.error { color: var(--vscode-errorForeground); }
-    .status.info { color: var(--vscode-foreground); opacity: .9; }
-    .tabs { display: flex; border-bottom: 1px solid var(--vscode-widget-border, var(--vscode-input-border, transparent)); margin-bottom: 12px; }
-    .tab { padding: 8px 12px; cursor: pointer; user-select: none; border: 1px solid transparent; border-bottom: none; border-top-left-radius: 6px; border-top-right-radius: 6px; }
-    .tab.active { background: var(--vscode-editor-background); border-color: var(--vscode-widget-border, var(--vscode-input-border, transparent)); border-bottom: 1px solid var(--vscode-editor-background); }
-    .tab:not(.active):hover { background: var(--vscode-input-background); }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    .kv { display: grid; grid-template-columns: 220px 1fr; gap: 8px 12px; align-items: center; }
-    .kv label { margin: 0; }
-    .mono { font-family: var(--vscode-editor-font-family); font-size: 12px; }
-    .toast { position: fixed; right: 12px; bottom: 12px; background: var(--vscode-editorWidget-background); color: var(--vscode-editorWidget-foreground); border: 1px solid var(--vscode-widget-border); padding: 8px 12px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.25); display: none; }
-    .toast.show { display: block; }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--vscode-focusBorder);
+    }
+
+    textarea {
+      min-height: 80px;
+      font-family: var(--vscode-editor-font-family);
+    }
+
+    .actions {
+      margin-top: 14px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 6px 10px;
+      background: var(--vscode-button-background);
+      color: var(--vscode-button-foreground);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    /* Primary button hover */
+    button:not(.button-secondary):hover {
+      background: var(--vscode-button-hoverBackground);
+    }
+
+    /* Secondary button base + hover with proper contrasting colors */
+    .button-secondary {
+      background: var(--vscode-button-secondaryBackground);
+      color: var(--vscode-button-secondaryForeground);
+    }
+
+    .button-secondary:hover {
+      background: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-secondaryBackground));
+      color: var(--vscode-button-secondaryForeground);
+    }
+
+    .hint {
+      font-size: 12px;
+      opacity: .8;
+      margin-top: 6px;
+    }
+
+    .section {
+      border: 1px solid var(--vscode-widget-border, var(--vscode-input-border, transparent));
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .ssl {
+      margin-top: 8px;
+    }
+
+    .status {
+      margin-top: 8px;
+      font-size: 12px;
+    }
+
+    .status.error {
+      color: var(--vscode-errorForeground);
+    }
+
+    .status.info {
+      color: var(--vscode-foreground);
+      opacity: .9;
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--vscode-widget-border, var(--vscode-input-border, transparent));
+      margin-bottom: 12px;
+    }
+
+    .tab {
+      padding: 8px 12px;
+      cursor: pointer;
+      user-select: none;
+      border: 1px solid transparent;
+      border-bottom: none;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+    }
+
+    .tab.active {
+      background: var(--vscode-editor-background);
+      border-color: var(--vscode-widget-border, var(--vscode-input-border, transparent));
+      border-bottom: 1px solid var(--vscode-editor-background);
+    }
+
+    .tab:not(.active):hover {
+      background: var(--vscode-input-background);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 8px 12px;
+      align-items: center;
+    }
+
+    .kv label {
+      margin: 0;
+    }
+
+    .mono {
+      font-family: var(--vscode-editor-font-family);
+      font-size: 12px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 12px;
+      bottom: 12px;
+      background: var(--vscode-editorWidget-background);
+      color: var(--vscode-editorWidget-foreground);
+      border: 1px solid var(--vscode-widget-border);
+      padding: 8px 12px;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+      display: none;
+    }
+
+    .toast.show {
+      display: block;
+    }
+
+    /* Collapsible section */
+    .section.collapsible {
+      padding: 0;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .section-header:focus {
+      outline: 1px solid var(--vscode-focusBorder);
+      outline-offset: -2px;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .chevron {
+      transition: transform .15s ease;
+      opacity: .8;
+    }
+
+    .collapsed .chevron {
+      transform: rotate(-90deg);
+    }
+
+    .section-body {
+      padding: 0 12px 12px;
+    }
+
+    .collapsed .section-body {
+      display: none;
+    }
   </style>
-  </head>
+</head>
+
 <body>
   <div id="wsName" class="hint"></div>
   <div class="tabs" role="tablist">
@@ -57,73 +251,80 @@
   </div>
 
   <div id="tab-conn" class="tab-content active" role="tabpanel" aria-labelledby="tab-conn">
-  <div class="section">
-    <label>Провайдер</label>
-    <select id="provider">
-      <option value="postgres">PostgreSQL</option>
-      <option value="mysql">MySQL</option>
-      <option value="sqlite">SQLite</option>
-    </select>
-    <div id="sqlFields">
-      <div class="row">
-        <div class="col">
-          <label>Host</label>
-          <input id="host" type="text" placeholder="localhost" />
+    <div class="section">
+      <label>Провайдер</label>
+      <select id="provider">
+        <option value="postgres">PostgreSQL</option>
+        <option value="mysql">MySQL</option>
+        <option value="sqlite">SQLite</option>
+      </select>
+      <div id="sqlFields">
+        <div class="row">
+          <div class="col">
+            <label>Host</label>
+            <input id="host" type="text" placeholder="localhost" />
+          </div>
+          <div class="col">
+            <label>Port</label>
+            <input id="port" type="number" min="1" max="65535" placeholder="5432/3306" />
+          </div>
         </div>
-        <div class="col">
-          <label>Port</label>
-          <input id="port" type="number" min="1" max="65535" placeholder="5432/3306" />
+        <div class="row">
+          <div class="col">
+            <label>Database</label>
+            <input id="database" type="text" />
+          </div>
+          <div class="col">
+            <label>User</label>
+            <input id="user" type="text" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <label>Password</label>
+            <input id="password" type="password" />
+          </div>
+          <div class="col ssl">
+            <label><input id="ssl" type="checkbox" /> Использовать SSL</label>
+          </div>
         </div>
       </div>
-      <div class="row">
-        <div class="col">
-          <label>Database</label>
-          <input id="database" type="text" />
-        </div>
-        <div class="col">
-          <label>User</label>
-          <input id="user" type="text" />
+      <div id="sqliteFields" class="hidden">
+        <label>Путь к файлу SQLite</label>
+        <div class="row">
+          <input id="filePath" type="text" />
+          <button id="browse">Обзор…</button>
         </div>
       </div>
-      <div class="row">
-        <div class="col">
-          <label>Password</label>
-          <input id="password" type="password" />
-        </div>
-        <div class="col ssl">
-          <label><input id="ssl" type="checkbox" /> Использовать SSL</label>
-        </div>
+
+      <div class="actions">
+        <button id="save">Сохранить</button>
+        <button id="delete" class="button-secondary">Удалить</button>
+        <button id="exportEnv" class="button-secondary">Скопировать подключение</button>
       </div>
-    </div>
-    <div id="sqliteFields" class="hidden">
-      <label>Путь к файлу SQLite</label>
-      <div class="row">
-        <input id="filePath" type="text" />
-        <button id="browse">Обзор…</button>
-      </div>
+      <div id="status" class="status"></div>
     </div>
 
-    <div class="actions">
-      <button id="save">Сохранить</button>
-      <button id="delete" class="button-secondary">Удалить</button>
-      <button id="exportEnv" class="button-secondary">Экспорт в .env</button>
+    <div id="envSection" class="section collapsible collapsed" aria-expanded="false">
+      <div id="envSectionHeader" class="section-header" role="button" tabindex="0" aria-controls="envSectionBody"
+        aria-expanded="false">
+        <h3 class="section-title" style="margin:0">Импорт из .env</h3>
+        <span class="chevron">▾</span>
+      </div>
+      <div id="envSectionBody" class="section-body" role="region" aria-labelledby="envSectionHeader">
+        <div class="actions">
+          <button id="importClipboard" class="button-secondary">Импорт из буфера</button>
+          <button id="importFile" class="button-secondary">Импорт из файла</button>
+        </div>
+        <label>Вставьте содержимое .env</label>
+        <textarea id="envPaste"
+          placeholder="DB_TYPE=postgres&#10;DB_HOST=localhost&#10;DB_PORT=5432&#10;DB_USER=user&#10;DB_PASSWORD=pass&#10;DB_NAME=db&#10;DB_SSL=false"></textarea>
+        <div class="actions">
+          <button id="importPaste">Импортировать из текста</button>
+        </div>
+        <div id="exportPreview" class="hint"></div>
+      </div>
     </div>
-    <div id="status" class="status"></div>
-  </div>
-
-  <div class="section">
-    <h3>Импорт из .env</h3>
-    <div class="actions">
-      <button id="importClipboard" class="button-secondary">Импорт из буфера</button>
-      <button id="importFile" class="button-secondary">Импорт из файла</button>
-    </div>
-    <label>Вставьте содержимое .env</label>
-    <textarea id="envPaste" placeholder="DB_TYPE=postgres&#10;DB_HOST=localhost&#10;DB_PORT=5432&#10;DB_USER=user&#10;DB_PASSWORD=pass&#10;DB_NAME=db&#10;DB_SSL=false"></textarea>
-    <div class="actions">
-      <button id="importPaste">Импортировать из текста</button>
-    </div>
-    <div id="exportPreview" class="hint"></div>
-  </div>
   </div>
 
   <div id="tab-gen" class="tab-content" role="tabpanel" aria-labelledby="tab-gen">
@@ -133,7 +334,8 @@
         <label for="outTemplate">Шаблон пути</label>
         <input id="outTemplate" type="text" class="mono" placeholder="context/context-${isoDate}.md" />
         <div></div>
-        <div class="hint">Поддерживаются плейсхолдеры: ${'{'}isoDate{'}'}, ${'{'}date{'}'}, ${'{'}workspaceFolder{'}'}, ${'{'}workspaceName{'}'}</div>
+        <div class="hint">Поддерживаются плейсхолдеры: ${'{'}isoDate{'}'}, ${'{'}date{'}'}, ${'{'}workspaceFolder{'}'},
+          ${'{'}workspaceName{'}'}</div>
         <label>Предпросмотр</label>
         <div id="outPreview" class="mono hint"></div>
       </div>
@@ -171,10 +373,37 @@
       envPaste: document.getElementById('envPaste'),
       importPaste: document.getElementById('importPaste'),
       exportPreview: document.getElementById('exportPreview'),
+      envSection: document.getElementById('envSection'),
+      envSectionHeader: document.getElementById('envSectionHeader'),
+      envSectionBody: document.getElementById('envSectionBody'),
       outTemplate: document.getElementById('outTemplate'),
       outPreview: document.getElementById('outPreview'),
       saveGen: document.getElementById('saveGen'),
     };
+    // Collapsible: .env import section
+    function toggleEnvSection(expanded) {
+      const isOpen = expanded != null ? expanded : els.envSection.classList.contains('collapsed');
+      if (isOpen) {
+        els.envSection.classList.remove('collapsed');
+        els.envSection.setAttribute('aria-expanded', 'true');
+        els.envSectionHeader.setAttribute('aria-expanded', 'true');
+      } else {
+        els.envSection.classList.add('collapsed');
+        els.envSection.setAttribute('aria-expanded', 'false');
+        els.envSectionHeader.setAttribute('aria-expanded', 'false');
+      }
+    }
+
+    els.envSectionHeader.addEventListener('click', () => toggleEnvSection());
+    els.envSectionHeader.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleEnvSection();
+      }
+      if (e.key === 'ArrowRight') toggleEnvSection(true);
+      if (e.key === 'ArrowLeft') toggleEnvSection(false);
+    });
+
     // Tabs
     els.tabs.forEach(tab => {
       tab.addEventListener('click', () => {
@@ -308,5 +537,6 @@
     vscode.postMessage({ type: 'ready' });
   </script>
   <div id="toast" class="toast">Скопировано в буфер обмена</div>
-  </body>
-  </html>
+</body>
+
+</html>
