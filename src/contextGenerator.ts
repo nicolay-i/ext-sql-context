@@ -206,6 +206,59 @@ export class DatabaseContextGenerator {
   }
 }
 
+export async function testConnection(config: ConnectionConfig): Promise<void> {
+  switch (config.provider) {
+    case 'postgres': {
+      const client = new PgClient({
+        host: config.host,
+        port: config.port,
+        user: config.user,
+        password: config.password,
+        database: config.database,
+        ssl: config.ssl
+      });
+      await client.connect();
+      try {
+        await client.query('SELECT 1');
+      } finally {
+        await client.end();
+      }
+      return;
+    }
+    case 'mysql': {
+      const connection = await mysql.createConnection({
+        host: config.host,
+        port: config.port,
+        user: config.user,
+        password: config.password,
+        database: config.database,
+        ssl: config.ssl ? { rejectUnauthorized: false } : undefined
+      });
+      try {
+        await connection.execute('SELECT 1');
+      } finally {
+        await connection.end();
+      }
+      return;
+    }
+    case 'sqlite': {
+      if (!config.filePath) {
+        throw new Error('Не указан путь к файлу SQLite.');
+      }
+      const driver = sqlite3.verbose();
+      const db = await open({ filename: config.filePath, driver: driver.Database, mode: driver.OPEN_READONLY });
+      try {
+        await db.get('SELECT 1');
+      } finally {
+        await db.close();
+      }
+      return;
+    }
+    default:
+      throw new Error(`Unsupported provider: ${config.provider}`);
+  }
+}
+
 function renderMarkdown(schema: DatabaseSchema): string {
   const lines: string[] = [];
   const nowIso = new Date().toISOString();

@@ -132,6 +132,20 @@
       opacity: .9;
     }
 
+    /* Unsaved changes indicator */
+    .status.unsaved {
+      color: var(--vscode-editorWarning-foreground, var(--vscode-foreground));
+      font-weight: 600;
+    }
+    .hidden { display: none; }
+
+    /* Dot on the tab when there are unsaved changes */
+    .tab.dirty::after {
+      content: ' •';
+      color: var(--vscode-editorWarning-foreground, var(--vscode-foreground));
+      font-weight: 700;
+    }
+
     .tabs {
       display: flex;
       border-bottom: 1px solid var(--vscode-widget-border, var(--vscode-input-border, transparent));
@@ -296,10 +310,12 @@
           <button id="browse">Обзор…</button>
         </div>
       </div>
+      <div id="unsaved" class="status unsaved hidden">Есть несохраненные изменения — не забывайте сохранить</div>
 
       <div class="actions">
         <button id="save">Сохранить</button>
         <button id="delete" class="button-secondary">Удалить</button>
+        <button id="testConnection" class="button-secondary">Проверить подключение</button>
         <button id="exportEnv" class="button-secondary">Скопировать подключение</button>
       </div>
       <div id="status" class="status"></div>
@@ -351,6 +367,7 @@
     const els = {
       wsName: document.getElementById('wsName'),
       tabs: Array.from(document.querySelectorAll('.tab')),
+  connTab: document.querySelector('.tab[data-tab="conn"]'),
       tabConn: document.getElementById('tab-conn'),
       tabGen: document.getElementById('tab-gen'),
       provider: document.getElementById('provider'),
@@ -379,6 +396,7 @@
       outTemplate: document.getElementById('outTemplate'),
       outPreview: document.getElementById('outPreview'),
       saveGen: document.getElementById('saveGen'),
+      unsaved: document.getElementById('unsaved'),
     };
     // Collapsible: .env import section
     function toggleEnvSection(expanded) {
@@ -441,14 +459,13 @@
       vscode.postMessage({ type: 'pickSqliteFile' });
     });
 
-    els.save.addEventListener('click', () => {
+    function collectConfig() {
       const provider = els.provider.value;
-      let config;
       if (provider === 'sqlite') {
-        config = { provider: 'sqlite', filePath: els.filePath.value };
+        return { provider: 'sqlite', filePath: els.filePath.value };
       } else {
         const port = els.port.value ? Number(els.port.value) : undefined;
-        config = {
+        return {
           provider,
           host: els.host.value,
           port,
@@ -458,7 +475,49 @@
           ssl: els.ssl.checked
         };
       }
+    }
+
+    // Compare two connection configs for equality
+    function configsEqual(a, b) {
+      if (!a && !b) return true;
+      if (!a || !b) return false;
+      if (a.provider !== b.provider) return false;
+      if (a.provider === 'sqlite') {
+        const af = (a.filePath || '').trim();
+        const bf = (b.filePath || '').trim();
+        return af === bf;
+      }
+      const norm = (v) => v == null ? '' : String(v).trim();
+      const normPort = (v) => (v == null || v === '' ? '' : String(Number(v)));
+      return (
+        norm(a.host) === norm(b.host) &&
+        normPort(a.port) === normPort(b.port) &&
+        norm(a.database) === norm(b.database) &&
+        norm(a.user) === norm(b.user) &&
+        norm(a.password || '') === norm(b.password || '') &&
+        Boolean(a.ssl) === Boolean(b.ssl)
+      );
+    }
+
+    let lastSavedConfig = null;
+    function updateDirty() {
+      const current = collectConfig();
+      const dirty = !configsEqual(current, lastSavedConfig);
+      els.unsaved.classList.toggle('hidden', !dirty);
+      if (els.connTab) els.connTab.classList.toggle('dirty', dirty);
+    }
+
+    els.save.addEventListener('click', () => {
+      const config = collectConfig();
       vscode.postMessage({ type: 'save', config });
+    });
+
+    // Test connection button
+    const testBtn = document.getElementById('testConnection');
+    testBtn.addEventListener('click', () => {
+      const config = collectConfig();
+      setStatus('info', 'Проверка подключения…');
+      vscode.postMessage({ type: 'testConnection', config });
     });
 
     els.del.addEventListener('click', () => {
@@ -467,6 +526,21 @@
 
     els.exportEnv.addEventListener('click', () => {
       vscode.postMessage({ type: 'exportEnv' });
+    });
+
+    // Track changes to mark unsaved state
+    [
+      els.provider,
+      els.host,
+      els.port,
+      els.database,
+      els.user,
+      els.password,
+      els.ssl,
+      els.filePath
+    ].forEach(el => {
+      const evt = (el && el.tagName === 'INPUT' && el.type === 'checkbox') ? 'change' : 'input';
+      if (el) el.addEventListener(evt, updateDirty);
     });
 
     // Generation settings save
@@ -517,6 +591,9 @@
           }
         }
         toggleProviderFields();
+        // Set last saved config to reflect current state from backend
+        lastSavedConfig = collectConfig();
+        updateDirty();
       } else if (msg.type === 'info') {
         setStatus('info', msg.message);
       } else if (msg.type === 'error') {
@@ -531,6 +608,7 @@
         if (msg.filePath) {
           els.filePath.value = msg.filePath;
         }
+        updateDirty();
       }
     });
 
