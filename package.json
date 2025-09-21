@@ -9,7 +9,28 @@
     "vscode": "^1.74.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Data Science",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "sql",
+    "database",
+    "markdown",
+    "postgres",
+    "mysql",
+    "sqlite",
+    "generator",
+    "context",
+    "vscode-extension",
+    "postgres context",
+    "code-assistance",
+    "productivity",
+    "llm",
+    "ai",
+    "openai",
+    "metadata",
+    "schema"
   ],
   "activationEvents": [
     "onCommand:sql-context.generateContext",
