@@ -74,3 +74,42 @@ Notes
 
 - Configurations are located in `.vscode/launch.json` and `.vscode/tasks.json`.
 - The build output is in `out/`, the main file is `out/extension.js` (see `tsconfig.json` and `package.json: main`).
+
+## Packaging & Publishing
+
+To build a VSIX package and publish to the VS Code Marketplace:
+
+1) Install dependencies and compile
+
+```powershell
+npm ci
+npm run compile
+```
+
+2) Package extension (creates a `.vsix` file in the project root)
+
+```powershell
+npm run package
+```
+
+3) Sign in to Marketplace (one-time)
+
+```powershell
+npx vsce login {username}
+# Paste your Personal Access Token (PAT) when prompted
+```
+
+4) Publish a new version
+
+```powershell
+# bump the version first (patch/minor/major)
+npm version patch
+
+# publish to Marketplace
+npm run publish
+```
+
+Notes
+
+- The `.vscodeignore` is configured to exclude sources and dev files, while keeping `out/`, `media/`, `icon.png`, and runtime dependencies.
+- Use `npm run package:win|linux|mac` to target a specific platform when native modules are involved.

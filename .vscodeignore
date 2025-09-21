@@ -1,7 +1,24 @@
 .vscode/**
+.github/**
 .git/**
-node_modules/**
+.gitignore
+.husky/**
+.vscode-test/**
 out/test/**
+test/**
 src/**
+plans/**
+webview.md
+tsk.md
+tsconfig.json
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
 **/*.map
 **/*.ts
+
+# Keep production dependencies — DO NOT exclude node_modules
+# node_modules/**
+
+# Misc
+npm-debug.log*

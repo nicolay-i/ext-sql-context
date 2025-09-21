@@ -73,7 +73,12 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "package": "vsce package --no-dependencies"
+    "package": "vsce package",
+    "publish": "vsce publish",
+    "package:win": "vsce package --target win32-x64",
+    "package:linux": "vsce package --target linux-x64",
+    "package:mac": "vsce package --target darwin-x64",
+    "package:no-deps": "vsce package --no-dependencies"
   },
   "devDependencies": {
     "@types/node": "^18.17.0",
