@@ -52,25 +52,25 @@ To run and debug the extension locally:
 
 ```
 npm install
-# или, если используете pnpm
+# or 
 pnpm install
 ```
 
-2) Start TypeScript in watch mode (optional — запускается автоматически при отладке)
+2) Start TypeScript in watch mode (optional — runs automatically during debugging)
 
 ```
 npm run watch
-# или
+# or
 pnpm run watch
 ```
 
 3) Launch the Extension Host
 
-- Откройте папку проекта в VS Code.
-- Откройте вкладку Run and Debug (Ctrl+Shift+D) и выберите конфигурацию `Run Extension`.
-- Нажмите F5 для запуска нового окна VS Code с установленным расширением в режиме разработки.
+- Open the project folder in VS Code.
+- Open the Run and Debug tab (Ctrl+Shift+D) and select the `Run Extension` configuration.
+- Press F5 to launch a new VS Code window with the extension installed in development mode.
 
 Notes
 
-- Конфигурации находятся в `.vscode/launch.json` и `.vscode/tasks.json`.
-- Сборка выводится в `out/`, основной файл — `out/extension.js` (см. `tsconfig.json` и `package.json: main`).
+- Configurations are located in `.vscode/launch.json` and `.vscode/tasks.json`.
+- The build output is in `out/`, the main file is `out/extension.js` (see `tsconfig.json` and `package.json: main`).
