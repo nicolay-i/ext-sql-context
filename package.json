@@ -1,0 +1,70 @@
+{
+  "name": "ext-sql-context",
+  "displayName": "SQL Context Generator",
+  "description": "Generate markdown context files for SQL databases within the current workspace.",
+  "version": "0.0.1",
+  "publisher": "sample",
+  "engines": {
+    "vscode": "^1.84.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:ext-sql-context.generateContext",
+    "onCommand:ext-sql-context.configureDatabase",
+    "onCommand:ext-sql-context.importEnv",
+    "onCommand:ext-sql-context.exportEnv"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "ext-sql-context.generateContext",
+        "title": "SQL Context: Generate Markdown Context"
+      },
+      {
+        "command": "ext-sql-context.configureDatabase",
+        "title": "SQL Context: Configure Database Connection"
+      },
+      {
+        "command": "ext-sql-context.importEnv",
+        "title": "SQL Context: Import Connection from .env"
+      },
+      {
+        "command": "ext-sql-context.exportEnv",
+        "title": "SQL Context: Export Connection to .env"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "SQL Context Generator",
+      "properties": {
+        "ext-sql-context.defaultOutputPattern": {
+          "type": "string",
+          "default": "context/context-${ISO_DATE}.md",
+          "description": "Relative path for generated context files. Supports the ${ISO_DATE} placeholder for unique names."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/node": "^18.17.0",
+    "@types/pg": "^8.15.5",
+    "@types/vscode": "^1.84.0",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "mysql2": "^3.9.2",
+    "pg": "^8.11.1",
+    "sqlite": "^4.2.1",
+    "sqlite3": "^5.1.6"
+  }
+}
