@@ -1,0 +1,92 @@
+{
+  "name": "sql-context-generator",
+  "displayName": "SQL Context Generator",
+  "description": "Generate markdown context files from SQL databases.",
+  "version": "0.0.1",
+  "publisher": "nicola-i",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nicolay-i/ext-sql-context.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nicolay-i/ext-sql-context/issues"
+  },
+  "homepage": "https://github.com/nicolay-i/ext-sql-context#readme",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other",
+    "Data Science",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "sql",
+    "database",
+    "markdown",
+    "postgres",
+    "mysql",
+    "sqlite",
+    "generator",
+    "context",
+    "vscode-extension",
+    "postgres context",
+    "code-assistance",
+    "productivity",
+    "llm",
+    "ai",
+    "openai",
+    "metadata",
+    "schema"
+  ],
+  "activationEvents": [
+    "onCommand:sql-context.generateContext",
+    "onCommand:sql-context.openSettings"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "sql-context.openSettings",
+        "title": "SQL Context: Open Settings"
+      },
+      {
+        "command": "sql-context.generateContext",
+        "title": "SQL Context: Generate Context Markdown"
+      }
+    ],
+    "configuration": {
+      "title": "SQL Context Generator",
+      "properties": {
+        "sql-context.outputPathTemplate": {
+          "type": "string",
+          "scope": "resource",
+          "default": "context/context-${isoDate}.md",
+          "description": "Default relative path for generated markdown files. Supports ${isoDate} placeholder."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "^18.17.0",
+    "@types/pg": "^8.15.5",
+    "@types/vscode": "^1.74.0",
+    "@vscode/vsce": "^2.22.0",
+    "tslib": "^2.6.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "mysql2": "^3.6.0",
+    "pg": "^8.11.3",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.6"
+  }
+}

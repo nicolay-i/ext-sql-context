@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="{{csp}}" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SQL Context Settings</title>
+  <style nonce="{{nonce}}">
+    :root {
+      color-scheme: light dark;
+    }
+
+    body {
+      font-family: var(--vscode-font-family);
+      padding: 12px 16px;
+      color: var(--vscode-foreground);
+      background: var(--vscode-editor-background);
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-weight: 600;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .col {
+      flex: 1;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      opacity: .9;
+      margin-top: 10px;
+      margin-bottom: 5px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="password"],
+    select,
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 6px 8px;
+      background: var(--vscode-input-background);
+      color: var(--vscode-input-foreground);
+      border: 1px solid var(--vscode-input-border, transparent);
+      border-radius: 4px;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--vscode-focusBorder);
+    }
+
+    textarea {
+      min-height: 80px;
+      font-family: var(--vscode-editor-font-family);
+    }
+
+    .actions {
+      margin-top: 14px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 6px 10px;
+      background: var(--vscode-button-background);
+      color: var(--vscode-button-foreground);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    /* Primary button hover */
+    button:not(.button-secondary):hover {
+      background: var(--vscode-button-hoverBackground);
+    }
+
+    /* Secondary button base + hover with proper contrasting colors */
+    .button-secondary {
+      background: var(--vscode-button-secondaryBackground);
+      color: var(--vscode-button-secondaryForeground);
+    }
+
+    .button-secondary:hover {
+      background: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-secondaryBackground));
+      color: var(--vscode-button-secondaryForeground);
+    }
+
+    .hint {
+      font-size: 12px;
+      opacity: .8;
+      margin-top: 6px;
+    }
+
+    .section {
+      border: 1px solid var(--vscode-widget-border, var(--vscode-input-border, transparent));
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .ssl {
+      margin-top: 8px;
+    }
+
+    .status {
+      margin-top: 8px;
+      font-size: 12px;
+    }
+
+    .status.error {
+      color: var(--vscode-errorForeground);
+    }
+
+    .status.info {
+      color: var(--vscode-foreground);
+      opacity: .9;
+    }
+
+    /* Unsaved changes indicator */
+    .status.unsaved {
+      color: var(--vscode-editorWarning-foreground, var(--vscode-foreground));
+      font-weight: 600;
+    }
+    .hidden { display: none; }
+
+    /* Dot on the tab when there are unsaved changes */
+    .tab.dirty::after {
+      content: ' •';
+      color: var(--vscode-editorWarning-foreground, var(--vscode-foreground));
+      font-weight: 700;
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--vscode-widget-border, var(--vscode-input-border, transparent));
+      margin-bottom: 12px;
+    }
+
+    .tab {
+      padding: 8px 12px;
+      cursor: pointer;
+      user-select: none;
+      border: 1px solid transparent;
+      border-bottom: none;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+    }
+
+    .tab.active {
+      background: var(--vscode-editor-background);
+      border-color: var(--vscode-widget-border, var(--vscode-input-border, transparent));
+      border-bottom: 1px solid var(--vscode-editor-background);
+    }
+
+    .tab:not(.active):hover {
+      background: var(--vscode-input-background);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 8px 12px;
+      align-items: center;
+    }
+
+    .kv label {
+      margin: 0;
+    }
+
+    .mono {
+      font-family: var(--vscode-editor-font-family);
+      font-size: 12px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 12px;
+      bottom: 12px;
+      background: var(--vscode-editorWidget-background);
+      color: var(--vscode-editorWidget-foreground);
+      border: 1px solid var(--vscode-widget-border);
+      padding: 8px 12px;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+      display: none;
+    }
+
+    .toast.show {
+      display: block;
+    }
+
+    /* Collapsible section */
+    .section.collapsible {
+      padding: 0;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .section-header:focus {
+      outline: 1px solid var(--vscode-focusBorder);
+      outline-offset: -2px;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .chevron {
+      transition: transform .15s ease;
+      opacity: .8;
+    }
+
+    .collapsed .chevron {
+      transform: rotate(-90deg);
+    }
+
+    .section-body {
+      padding: 0 12px 12px;
+    }
+
+    .collapsed .section-body {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="wsName" class="hint"></div>
+  <div class="tabs" role="tablist">
+    <div class="tab active" data-tab="gen" role="tab" aria-selected="true">File Generation Settings</div>
+    <div class="tab" data-tab="conn" role="tab" aria-selected="false">Connection Settings</div>
+  </div>
+
+  <div id="tab-gen" class="tab-content active" role="tabpanel" aria-labelledby="tab-gen">
+    <div class="section">
+      <h3 style="margin-top:0">Context File Generation</h3>
+      <div class="kv">
+        <label for="outTemplate">Path Template</label>
+        <input id="outTemplate" type="text" class="mono" placeholder="context/context-${isoDate}.md" />
+        <div></div>
+        <div class="hint">Supported placeholders: ${isoDate}, ${date}, ${workspaceFolder},
+          ${workspaceName}</div>
+        <label>Preview</label>
+        <div id="outPreview" class="mono hint"></div>
+      </div>
+      <div class="actions">
+        <button id="saveGen" class="button-secondary">Save Generation Settings</button>
+      </div>
+      <br>
+      <div class="actions">
+        <button id="startGen">Start Generation</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-conn" class="tab-content" role="tabpanel" aria-labelledby="tab-conn">
+    <div class="section">
+      <label>Provider</label>
+      <select id="provider">
+        <option value="postgres">PostgreSQL</option>
+        <option value="mysql">MySQL</option>
+        <option value="sqlite">SQLite</option>
+      </select>
+      <div id="sqlFields">
+        <div class="row">
+          <div class="col">
+            <label>Host</label>
+            <input id="host" type="text" placeholder="localhost" />
+          </div>
+          <div class="col">
+            <label>Port</label>
+            <input id="port" type="number" min="1" max="65535" placeholder="5432/3306" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <label>Database</label>
+            <input id="database" type="text" />
+          </div>
+          <div class="col">
+            <label>User</label>
+            <input id="user" type="text" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <label>Password</label>
+            <input id="password" type="password" />
+          </div>
+          <div class="col ssl">
+            <label><input id="ssl" type="checkbox" /> Use SSL</label>
+          </div>
+        </div>
+      </div>
+      <div id="sqliteFields" class="hidden">
+        <label>SQLite File Path</label>
+        <div class="row">
+          <input id="filePath" type="text" />
+          <button id="browse">Browse…</button>
+        </div>
+      </div>
+      <div id="unsaved" class="status unsaved hidden">There are unsaved changes — don't forget to save</div>
+
+      <div class="actions">
+        <button id="save">Save</button>
+        <button id="delete" class="button-secondary">Delete</button>
+        <button id="testConnection" class="button-secondary">Test Connection</button>
+        <button id="exportEnv" class="button-secondary">Copy Connection</button>
+      </div>
+      <div id="status" class="status"></div>
+    </div>
+
+    <div id="envSection" class="section collapsible collapsed" aria-expanded="false">
+      <div id="envSectionHeader" class="section-header" role="button" tabindex="0" aria-controls="envSectionBody"
+        aria-expanded="false">
+        <h3 class="section-title" style="margin:0">Import from .env</h3>
+        <span class="chevron">▾</span>
+      </div>
+      <div id="envSectionBody" class="section-body" role="region" aria-labelledby="envSectionHeader">
+        <div class="actions">
+          <button id="importClipboard" class="button-secondary">Import from Clipboard</button>
+          <button id="importFile" class="button-secondary">Import from File</button>
+        </div>
+        <label>Paste .env content</label>
+        <textarea id="envPaste"
+          placeholder="DB_TYPE=postgres&#10;DB_HOST=localhost&#10;DB_PORT=5432&#10;DB_USER=user&#10;DB_PASSWORD=pass&#10;DB_NAME=db&#10;DB_SSL=false"></textarea>
+        <div class="actions">
+          <button id="importPaste">Import from Text</button>
+        </div>
+        <div id="exportPreview" class="hint"></div>
+      </div>
+    </div>
+  </div>
+
+  <script nonce="{{nonce}}">
+    const vscode = acquireVsCodeApi();
+
+    const els = {
+      wsName: document.getElementById('wsName'),
+      tabs: Array.from(document.querySelectorAll('.tab')),
+  connTab: document.querySelector('.tab[data-tab="conn"]'),
+      tabConn: document.getElementById('tab-conn'),
+      tabGen: document.getElementById('tab-gen'),
+      provider: document.getElementById('provider'),
+      host: document.getElementById('host'),
+      port: document.getElementById('port'),
+      database: document.getElementById('database'),
+      user: document.getElementById('user'),
+      password: document.getElementById('password'),
+      ssl: document.getElementById('ssl'),
+      filePath: document.getElementById('filePath'),
+      browse: document.getElementById('browse'),
+      sqlFields: document.getElementById('sqlFields'),
+      sqliteFields: document.getElementById('sqliteFields'),
+      save: document.getElementById('save'),
+      del: document.getElementById('delete'),
+      exportEnv: document.getElementById('exportEnv'),
+      status: document.getElementById('status'),
+      importClipboard: document.getElementById('importClipboard'),
+      importFile: document.getElementById('importFile'),
+      envPaste: document.getElementById('envPaste'),
+      importPaste: document.getElementById('importPaste'),
+      exportPreview: document.getElementById('exportPreview'),
+      envSection: document.getElementById('envSection'),
+      envSectionHeader: document.getElementById('envSectionHeader'),
+      envSectionBody: document.getElementById('envSectionBody'),
+      outTemplate: document.getElementById('outTemplate'),
+      outPreview: document.getElementById('outPreview'),
+      saveGen: document.getElementById('saveGen'),
+      startGen: document.getElementById('startGen'),
+      unsaved: document.getElementById('unsaved'),
+    };
+    // Collapsible: .env import section
+    function toggleEnvSection(expanded) {
+      const isOpen = expanded != null ? expanded : els.envSection.classList.contains('collapsed');
+      if (isOpen) {
+        els.envSection.classList.remove('collapsed');
+        els.envSection.setAttribute('aria-expanded', 'true');
+        els.envSectionHeader.setAttribute('aria-expanded', 'true');
+      } else {
+        els.envSection.classList.add('collapsed');
+        els.envSection.setAttribute('aria-expanded', 'false');
+        els.envSectionHeader.setAttribute('aria-expanded', 'false');
+      }
+    }
+
+    els.envSectionHeader.addEventListener('click', () => toggleEnvSection());
+    els.envSectionHeader.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleEnvSection();
+      }
+      if (e.key === 'ArrowRight') toggleEnvSection(true);
+      if (e.key === 'ArrowLeft') toggleEnvSection(false);
+    });
+
+    // Tabs
+    function switchTab(tabId) {
+      els.tabs.forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      const tab = document.querySelector(`.tab[data-tab="${tabId}"]`);
+      if (tab) {
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+      }
+      if (tabId === 'conn') {
+        els.tabConn.classList.add('active');
+        els.tabGen.classList.remove('active');
+      } else {
+        els.tabGen.classList.add('active');
+        els.tabConn.classList.remove('active');
+      }
+    }
+
+    els.tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const id = tab.getAttribute('data-tab');
+        switchTab(id);
+      });
+    });
+
+
+    function setStatus(kind, text) {
+      els.status.className = 'status ' + kind;
+      els.status.textContent = text || '';
+    }
+
+    function toggleProviderFields() {
+      const p = els.provider.value;
+      const isSqlite = p === 'sqlite';
+      els.sqlFields.classList.toggle('hidden', isSqlite);
+      els.sqliteFields.classList.toggle('hidden', !isSqlite);
+      if (p === 'postgres' && !els.port.value) els.port.value = '5432';
+      if (p === 'mysql' && !els.port.value) els.port.value = '3306';
+    }
+
+    els.provider.addEventListener('change', toggleProviderFields);
+
+    els.browse.addEventListener('click', () => {
+      vscode.postMessage({ type: 'pickSqliteFile' });
+    });
+
+    function collectConfig() {
+      const provider = els.provider.value;
+      if (provider === 'sqlite') {
+        return { provider: 'sqlite', filePath: els.filePath.value };
+      } else {
+        const port = els.port.value ? Number(els.port.value) : undefined;
+        return {
+          provider,
+          host: els.host.value,
+          port,
+          database: els.database.value,
+          user: els.user.value,
+          password: els.password.value || undefined,
+          ssl: els.ssl.checked
+        };
+      }
+    }
+
+    // Compare two connection configs for equality
+    function configsEqual(a, b) {
+      if (!a && !b) return true;
+      if (!a || !b) return false;
+      if (a.provider !== b.provider) return false;
+      if (a.provider === 'sqlite') {
+        const af = (a.filePath || '').trim();
+        const bf = (b.filePath || '').trim();
+        return af === bf;
+      }
+      const norm = (v) => v == null ? '' : String(v).trim();
+      const normPort = (v) => (v == null || v === '' ? '' : String(Number(v)));
+      return (
+        norm(a.host) === norm(b.host) &&
+        normPort(a.port) === normPort(b.port) &&
+        norm(a.database) === norm(b.database) &&
+        norm(a.user) === norm(b.user) &&
+        norm(a.password || '') === norm(b.password || '') &&
+        Boolean(a.ssl) === Boolean(b.ssl)
+      );
+    }
+
+    let lastSavedConfig = null;
+    function updateDirty() {
+      const current = collectConfig();
+      const dirty = !configsEqual(current, lastSavedConfig);
+      els.unsaved.classList.toggle('hidden', !dirty);
+      if (els.connTab) els.connTab.classList.toggle('dirty', dirty);
+    }
+
+    els.save.addEventListener('click', () => {
+      const config = collectConfig();
+      vscode.postMessage({ type: 'save', config });
+    });
+
+    // Test connection button
+    const testBtn = document.getElementById('testConnection');
+    testBtn.addEventListener('click', () => {
+      const config = collectConfig();
+      setStatus('info', 'Testing connection…');
+      vscode.postMessage({ type: 'testConnection', config });
+    });
+
+    els.del.addEventListener('click', () => {
+      vscode.postMessage({ type: 'delete' });
+    });
+
+    els.exportEnv.addEventListener('click', () => {
+      vscode.postMessage({ type: 'exportEnv' });
+    });
+
+    // Track changes to mark unsaved state
+    [
+      els.provider,
+      els.host,
+      els.port,
+      els.database,
+      els.user,
+      els.password,
+      els.ssl,
+      els.filePath
+    ].forEach(el => {
+      const evt = (el && el.tagName === 'INPUT' && el.type === 'checkbox') ? 'change' : 'input';
+      if (el) el.addEventListener(evt, updateDirty);
+    });
+
+    // Generation settings save
+    els.saveGen.addEventListener('click', () => {
+      const outputPathTemplate = els.outTemplate.value || 'context/context-${isoDate}.md';
+      vscode.postMessage({ type: 'saveGeneration', outputPathTemplate });
+    });
+
+    // Start generation using current template
+    els.startGen.addEventListener('click', () => {
+      vscode.postMessage({ type: 'startGeneration' });
+    });
+
+    els.importClipboard.addEventListener('click', () => {
+      vscode.postMessage({ type: 'importEnv', source: 'clipboard' });
+    });
+    els.importFile.addEventListener('click', () => {
+      vscode.postMessage({ type: 'importEnv', source: 'file' });
+    });
+    els.importPaste.addEventListener('click', () => {
+      const content = els.envPaste.value;
+      vscode.postMessage({ type: 'importEnv', source: 'paste', content });
+    });
+
+    window.addEventListener('message', event => {
+      const msg = event.data;
+      if (msg.type === 'state') {
+        els.wsName.textContent = '';
+        // Generation settings
+        if (msg.outputPathTemplate) els.outTemplate.value = msg.outputPathTemplate;
+        els.outPreview.textContent = msg.outputPathPreview || '';
+        if (!msg.connection) {
+          els.provider.value = 'postgres';
+          els.host.value = '';
+          els.port.value = '';
+          els.database.value = '';
+          els.user.value = '';
+          els.password.value = '';
+          els.ssl.checked = false;
+          els.filePath.value = '';
+        } else {
+          const c = msg.connection;
+          els.provider.value = c.provider;
+          if (c.provider === 'sqlite') {
+            els.filePath.value = c.filePath || '';
+          } else {
+            els.host.value = c.host || '';
+            els.port.value = c.port != null ? String(c.port) : '';
+            els.database.value = c.database || '';
+            els.user.value = c.user || '';
+            els.password.value = c.password || '';
+            els.ssl.checked = Boolean(c.ssl);
+          }
+        }
+        toggleProviderFields();
+        // Set last saved config to reflect current state from backend
+        lastSavedConfig = collectConfig();
+        updateDirty();
+        switchTab('gen');
+      } else if (msg.type === 'info') {
+        setStatus('info', msg.message);
+      } else if (msg.type === 'error') {
+        setStatus('error', msg.message);
+      } else if (msg.type === 'exportResult') {
+        if (msg.env) {
+          els.exportPreview.textContent = msg.env;
+        } else {
+          els.exportPreview.textContent = '';
+        }
+      } else if (msg.type === 'pickedSqliteFile') {
+        if (msg.filePath) {
+          els.filePath.value = msg.filePath;
+        }
+        updateDirty();
+      }
+    });
+
+    vscode.postMessage({ type: 'ready' });
+  </script>
+  <div id="toast" class="toast">Copied to clipboard</div>
+</body>
+
+</html>
