@@ -4,6 +4,7 @@
   "description": "Generate markdown context files from SQL databases.",
   "version": "0.0.1",
   "publisher": "ext-sql-context",
+  "icon": "icon.png",
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -11,10 +12,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:sql-context.configureConnection",
     "onCommand:sql-context.generateContext",
-    "onCommand:sql-context.importConnectionFromEnv",
-    "onCommand:sql-context.exportConnectionToEnv",
     "onCommand:sql-context.openSettings"
   ],
   "main": "./out/extension.js",
