@@ -19,11 +19,21 @@ export interface TableColumn {
   description?: string | null;
 }
 
+export interface ForeignKey {
+  name?: string | null;
+  columns: string[];
+  referencedTable: { schema?: string; name: string };
+  referencedColumns: string[];
+  onUpdate?: string | null;
+  onDelete?: string | null;
+}
+
 export interface TableInfo {
   name: string;
   schema?: string;
   type: 'table' | 'view';
   columns: TableColumn[];
+  foreignKeys?: ForeignKey[];
 }
 
 export interface DatabaseSchema {

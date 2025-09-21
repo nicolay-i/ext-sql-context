@@ -3,7 +3,7 @@ import { Client as PgClient } from 'pg';
 import mysql from 'mysql2/promise';
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
-import { ConnectionConfig, DatabaseSchema, TableColumn, TableInfo } from './types';
+import { ConnectionConfig, DatabaseSchema, TableColumn, TableInfo, ForeignKey } from './types';
 
 export class DatabaseContextGenerator {
   constructor(private readonly config: ConnectionConfig) {}
@@ -78,13 +78,73 @@ export class DatabaseContextGenerator {
         columnsMap.set(key, existing);
       }
 
+      // Collect foreign keys
+      const fkResult = await client.query<{
+        constraint_name: string | null;
+        table_schema: string;
+        table_name: string;
+        column_name: string;
+        foreign_table_schema: string;
+        foreign_table_name: string;
+        foreign_column_name: string;
+        update_rule: string | null;
+        delete_rule: string | null;
+      }>(
+        `SELECT
+           tc.constraint_name,
+           kcu.table_schema,
+           kcu.table_name,
+           kcu.column_name,
+           ccu.table_schema AS foreign_table_schema,
+           ccu.table_name AS foreign_table_name,
+           ccu.column_name AS foreign_column_name,
+           rc.update_rule,
+           rc.delete_rule
+         FROM information_schema.table_constraints AS tc
+         JOIN information_schema.key_column_usage AS kcu
+           ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
+         JOIN information_schema.referential_constraints AS rc
+           ON rc.constraint_name = tc.constraint_name AND rc.constraint_schema = tc.table_schema
+         JOIN information_schema.constraint_column_usage AS ccu
+           ON ccu.constraint_name = tc.constraint_name AND ccu.constraint_schema = tc.table_schema
+         WHERE tc.constraint_type = 'FOREIGN KEY'
+           AND tc.table_schema NOT IN ('pg_catalog', 'information_schema')
+         ORDER BY kcu.table_schema, kcu.table_name, tc.constraint_name, kcu.ordinal_position`
+      );
+
+      const fkMap = new Map<string, ForeignKey[]>();
+      for (const row of fkResult.rows) {
+        const tableKey = `${row.table_schema}.${row.table_name}`;
+        const fkKey = `${tableKey}:${row.constraint_name ?? ''}`;
+        let fks = fkMap.get(tableKey);
+        if (!fks) {
+          fks = [];
+          fkMap.set(tableKey, fks);
+        }
+        let fk = fks.find((x) => x.name === row.constraint_name);
+        if (!fk) {
+          fk = {
+            name: row.constraint_name,
+            columns: [],
+            referencedTable: { schema: row.foreign_table_schema, name: row.foreign_table_name },
+            referencedColumns: [],
+            onUpdate: row.update_rule,
+            onDelete: row.delete_rule
+          };
+          fks.push(fk);
+        }
+        fk.columns.push(row.column_name);
+        fk.referencedColumns.push(row.foreign_column_name);
+      }
+
       const tables: TableInfo[] = tableResult.rows.map((row): TableInfo => {
         const key = `${row.table_schema}.${row.table_name}`;
         return {
           name: row.table_name,
           schema: row.table_schema,
           type: row.table_type === 'VIEW' ? 'view' : 'table',
-          columns: columnsMap.get(key) ?? []
+          columns: columnsMap.get(key) ?? [],
+          foreignKeys: fkMap.get(key) ?? []
         };
       });
 
@@ -139,12 +199,58 @@ export class DatabaseContextGenerator {
         columnsMap.set(key, existing);
       }
 
+      // Foreign keys
+      const [fkRows] = await connection.execute<mysql.RowDataPacket[]>(
+        `SELECT
+           kcu.CONSTRAINT_NAME,
+           kcu.TABLE_NAME,
+           kcu.COLUMN_NAME,
+           kcu.REFERENCED_TABLE_NAME,
+           kcu.REFERENCED_COLUMN_NAME,
+           rc.UPDATE_RULE,
+           rc.DELETE_RULE
+         FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+         JOIN INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
+           ON rc.CONSTRAINT_SCHEMA = kcu.TABLE_SCHEMA
+          AND rc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
+         WHERE kcu.TABLE_SCHEMA = ?
+           AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
+         ORDER BY kcu.TABLE_NAME, kcu.CONSTRAINT_NAME, kcu.ORDINAL_POSITION`,
+        [this.config.database]
+      );
+
+      const fkMap = new Map<string, ForeignKey[]>();
+      for (const row of fkRows) {
+        const tableName = row.TABLE_NAME as string;
+        let fks = fkMap.get(tableName);
+        if (!fks) {
+          fks = [];
+          fkMap.set(tableName, fks);
+        }
+        const constraintName = (row.CONSTRAINT_NAME as string) ?? null;
+        let fk = fks.find((x) => x.name === constraintName);
+        if (!fk) {
+          fk = {
+            name: constraintName,
+            columns: [],
+            referencedTable: { name: row.REFERENCED_TABLE_NAME as string },
+            referencedColumns: [],
+            onUpdate: (row.UPDATE_RULE as string) ?? null,
+            onDelete: (row.DELETE_RULE as string) ?? null
+          };
+          fks.push(fk);
+        }
+        fk.columns.push(row.COLUMN_NAME as string);
+        fk.referencedColumns.push(row.REFERENCED_COLUMN_NAME as string);
+      }
+
       const tables: TableInfo[] = tableRows.map((row) => {
         const tableName = row.TABLE_NAME as string;
         return {
           name: tableName,
           type: (row.TABLE_TYPE as string) === 'VIEW' ? 'view' : 'table',
-          columns: columnsMap.get(tableName) ?? []
+          columns: columnsMap.get(tableName) ?? [],
+          foreignKeys: fkMap.get(tableName) ?? []
         };
       });
 
@@ -188,10 +294,40 @@ export class DatabaseContextGenerator {
           defaultValue: column.dflt_value
         }));
 
+        // Foreign keys for this table
+        const fks = await db.all<Array<{
+          id: number;
+          seq: number;
+          table: string;
+          from: string;
+          to: string;
+          on_update: string | null;
+          on_delete: string | null;
+        }>>(`PRAGMA foreign_key_list(${quoted})`);
+
+        const fkGrouped = new Map<number, ForeignKey>();
+        for (const row of fks) {
+          let fk = fkGrouped.get(row.id);
+          if (!fk) {
+            fk = {
+              name: null,
+              columns: [],
+              referencedTable: { name: row.table },
+              referencedColumns: [],
+              onUpdate: row.on_update ?? null,
+              onDelete: row.on_delete ?? null
+            };
+            fkGrouped.set(row.id, fk);
+          }
+          fk.columns.push(row.from);
+          fk.referencedColumns.push(row.to);
+        }
+
         tableInfos.push({
           name: table.name,
           type: table.type === 'view' ? 'view' : 'table',
-          columns: columnInfos
+          columns: columnInfos,
+          foreignKeys: Array.from(fkGrouped.values())
         });
       }
 
@@ -291,6 +427,24 @@ function renderMarkdown(schema: DatabaseSchema): string {
       );
     }
     lines.push('');
+
+    const fks = table.foreignKeys ?? [];
+    if (fks.length > 0) {
+      lines.push('Relations:');
+      lines.push('');
+      lines.push('| Columns | References | On Update | On Delete |');
+      lines.push('| ------- | ---------- | --------- | --------- |');
+      for (const fk of fks) {
+        const cols = fk.columns.join(', ');
+        const refCols = fk.referencedColumns.join(', ');
+        const refTable = fk.referencedTable.schema
+          ? `${fk.referencedTable.schema}.${fk.referencedTable.name}`
+          : fk.referencedTable.name;
+        const ref = `${refTable} (${refCols})`;
+        lines.push(`| ${cols} | ${ref} | ${fk.onUpdate ?? ''} | ${fk.onDelete ?? ''} |`);
+      }
+      lines.push('');
+    }
   }
 
   return lines.join('\n');
