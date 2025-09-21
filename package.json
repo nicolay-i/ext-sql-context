@@ -19,24 +19,12 @@
   "contributes": {
     "commands": [
       {
-        "command": "sql-context.configureConnection",
-        "title": "SQL Context: Configure Database Connection"
-      },
-      {
         "command": "sql-context.openSettings",
         "title": "SQL Context: Open Settings"
       },
       {
         "command": "sql-context.generateContext",
         "title": "SQL Context: Generate Context Markdown"
-      },
-      {
-        "command": "sql-context.importConnectionFromEnv",
-        "title": "SQL Context: Import Connection From .env"
-      },
-      {
-        "command": "sql-context.exportConnectionToEnv",
-        "title": "SQL Context: Export Connection To .env"
       }
     ],
     "configuration": {

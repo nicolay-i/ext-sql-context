@@ -243,7 +243,7 @@ export async function testConnection(config: ConnectionConfig): Promise<void> {
     }
     case 'sqlite': {
       if (!config.filePath) {
-        throw new Error('Не указан путь к файлу SQLite.');
+        throw new Error('SQLite file path not specified.');
       }
       const driver = sqlite3.verbose();
       const db = await open({ filename: config.filePath, driver: driver.Database, mode: driver.OPEN_READONLY });

@@ -1,26 +1,23 @@
-1. нужно добавить страницу настроек расширения, на которую перенести функционал добавления / изменения / удаления настроек подключения к БД, а так же методы экспотра и импорта из формата .env
-это должен быть отдельный файл для webview
+1. Need to add an extension settings page to move the functionality for adding/changing/removing database connection settings, as well as export and import methods from .env format.
+This should be a separate file for webview.
 
+1.2. HTML needs to be saved in a separate file and connected in settingsWebView
 
+1.3. Need to style for VS Code.
+Add tabs: connection settings and file generation settings
+Show a message when copying to clipboard
 
-1.2. html нужно сохранить в отдельном файле и подключить в settingsWebView
+1.4. The "Import from .env" section needs to be collapsible by clicking on the header to save space. Initially collapsed.
 
-1.3. Нужно стилизовать под vscode. 
-Добавить вкладки: настройки подключения и настройки генерации файла
-При копировании в буфер обмена показывать сообщение об этом
+1.5. Need to add a "test connection" button in the connection data form.
 
+1.6. Need to explicitly show that connection data has not been saved yet if the user changed it but did not click "Save".
 
-1.4. Раздел "Импорт из .env" нужно сделать разворачивающимся по клику на заголовок, чтобы не занимал много места. Изначально свернут.
+1.7. Need to add an icon for the extension
 
-1.5. Нужно добавить кнопку "проверить подключение" в форму заполнения данных подключения.
+1.8. Need to add a "Start Generation" button in the file generation settings form, which will run the file generation command. No need to show path prompt - use the template.
 
-1.6. Нужно явно показывать, что данные подключения еще не были сохранены, если пользователь их изменил, но не нажал "Сохранить".
-
-1.7. Нужно добавить иконку для расширения
-
-1.8. Нужно добавить кнопку "Начать генерацию" в форму настроек генерации файла, которая будет запускать команду генерации файла.При этом не нужно показывать запрос пути - нужно использовать шаблон.
-
-1.9. Нужно сделать вкладку "Настройки генерации" первой в списке вкладок, и по умолчанию открывать ее, если нет сохраненных настроек подключения.
+1.9. Need to make the "File Generation Settings" tab first in the list of tabs, and open it by default if no connection settings are saved.
 
 
 

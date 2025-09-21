@@ -261,35 +261,35 @@
 <body>
   <div id="wsName" class="hint"></div>
   <div class="tabs" role="tablist">
-    <div class="tab active" data-tab="gen" role="tab" aria-selected="true">Настройки генерации файла</div>
-    <div class="tab" data-tab="conn" role="tab" aria-selected="false">Настройки подключения</div>
+    <div class="tab active" data-tab="gen" role="tab" aria-selected="true">File Generation Settings</div>
+    <div class="tab" data-tab="conn" role="tab" aria-selected="false">Connection Settings</div>
   </div>
 
   <div id="tab-gen" class="tab-content active" role="tabpanel" aria-labelledby="tab-gen">
     <div class="section">
-      <h3 style="margin-top:0">Генерация файла контекста</h3>
+      <h3 style="margin-top:0">Context File Generation</h3>
       <div class="kv">
-        <label for="outTemplate">Шаблон пути</label>
+        <label for="outTemplate">Path Template</label>
         <input id="outTemplate" type="text" class="mono" placeholder="context/context-${isoDate}.md" />
         <div></div>
-        <div class="hint">Поддерживаются плейсхолдеры: ${isoDate}, ${date}, ${workspaceFolder},
+        <div class="hint">Supported placeholders: ${isoDate}, ${date}, ${workspaceFolder},
           ${workspaceName}</div>
-        <label>Предпросмотр</label>
+        <label>Preview</label>
         <div id="outPreview" class="mono hint"></div>
       </div>
       <div class="actions">
-        <button id="saveGen" class="button-secondary">Сохранить настройки генерации</button>
+        <button id="saveGen" class="button-secondary">Save Generation Settings</button>
       </div>
       <br>
       <div class="actions">
-        <button id="startGen">Начать генерацию</button>
+        <button id="startGen">Start Generation</button>
       </div>
     </div>
   </div>
 
   <div id="tab-conn" class="tab-content" role="tabpanel" aria-labelledby="tab-conn">
     <div class="section">
-      <label>Провайдер</label>
+      <label>Provider</label>
       <select id="provider">
         <option value="postgres">PostgreSQL</option>
         <option value="mysql">MySQL</option>
@@ -322,24 +322,24 @@
             <input id="password" type="password" />
           </div>
           <div class="col ssl">
-            <label><input id="ssl" type="checkbox" /> Использовать SSL</label>
+            <label><input id="ssl" type="checkbox" /> Use SSL</label>
           </div>
         </div>
       </div>
       <div id="sqliteFields" class="hidden">
-        <label>Путь к файлу SQLite</label>
+        <label>SQLite File Path</label>
         <div class="row">
           <input id="filePath" type="text" />
-          <button id="browse">Обзор…</button>
+          <button id="browse">Browse…</button>
         </div>
       </div>
-      <div id="unsaved" class="status unsaved hidden">Есть несохраненные изменения — не забывайте сохранить</div>
+      <div id="unsaved" class="status unsaved hidden">There are unsaved changes — don't forget to save</div>
 
       <div class="actions">
-        <button id="save">Сохранить</button>
-        <button id="delete" class="button-secondary">Удалить</button>
-        <button id="testConnection" class="button-secondary">Проверить подключение</button>
-        <button id="exportEnv" class="button-secondary">Скопировать подключение</button>
+        <button id="save">Save</button>
+        <button id="delete" class="button-secondary">Delete</button>
+        <button id="testConnection" class="button-secondary">Test Connection</button>
+        <button id="exportEnv" class="button-secondary">Copy Connection</button>
       </div>
       <div id="status" class="status"></div>
     </div>
@@ -347,19 +347,19 @@
     <div id="envSection" class="section collapsible collapsed" aria-expanded="false">
       <div id="envSectionHeader" class="section-header" role="button" tabindex="0" aria-controls="envSectionBody"
         aria-expanded="false">
-        <h3 class="section-title" style="margin:0">Импорт из .env</h3>
+        <h3 class="section-title" style="margin:0">Import from .env</h3>
         <span class="chevron">▾</span>
       </div>
       <div id="envSectionBody" class="section-body" role="region" aria-labelledby="envSectionHeader">
         <div class="actions">
-          <button id="importClipboard" class="button-secondary">Импорт из буфера</button>
-          <button id="importFile" class="button-secondary">Импорт из файла</button>
+          <button id="importClipboard" class="button-secondary">Import from Clipboard</button>
+          <button id="importFile" class="button-secondary">Import from File</button>
         </div>
-        <label>Вставьте содержимое .env</label>
+        <label>Paste .env content</label>
         <textarea id="envPaste"
           placeholder="DB_TYPE=postgres&#10;DB_HOST=localhost&#10;DB_PORT=5432&#10;DB_USER=user&#10;DB_PASSWORD=pass&#10;DB_NAME=db&#10;DB_SSL=false"></textarea>
         <div class="actions">
-          <button id="importPaste">Импортировать из текста</button>
+          <button id="importPaste">Import from Text</button>
         </div>
         <div id="exportPreview" class="hint"></div>
       </div>
@@ -533,7 +533,7 @@
     const testBtn = document.getElementById('testConnection');
     testBtn.addEventListener('click', () => {
       const config = collectConfig();
-      setStatus('info', 'Проверка подключения…');
+      setStatus('info', 'Testing connection…');
       vscode.postMessage({ type: 'testConnection', config });
     });
 
@@ -637,7 +637,7 @@
 
     vscode.postMessage({ type: 'ready' });
   </script>
-  <div id="toast" class="toast">Скопировано в буфер обмена</div>
+  <div id="toast" class="toast">Copied to clipboard</div>
 </body>
 
 </html>

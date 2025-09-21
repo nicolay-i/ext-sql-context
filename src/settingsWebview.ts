@@ -69,41 +69,41 @@ export class SettingsWebview {
                 }
               }
               await this.connectionManager.saveConnection(folder, next);
-              post({ type: 'info', message: 'Настройки подключения сохранены.' });
+              post({ type: 'info', message: 'Connection settings saved.' });
               await sendState();
               break;
             }
             case 'delete': {
               await this.connectionManager.removeConnection(folder);
-              post({ type: 'info', message: 'Подключение удалено.' });
+              post({ type: 'info', message: 'Connection deleted.' });
               await sendState();
               break;
             }
             case 'importEnv': {
               if (msg.source === 'paste' && msg.content) {
                 const cfg = await this.connectionManager.importFromEnv(folder, msg.content);
-                post({ type: 'info', message: `Импортировано подключение (${cfg.provider}).` });
+                post({ type: 'info', message: `Connection imported (${cfg.provider}).` });
                 await sendState();
                 break;
               }
               if (msg.source === 'clipboard') {
                 const content = await vscode.env.clipboard.readText();
                 if (!content.trim()) {
-                  post({ type: 'error', message: 'Буфер обмена пуст.' });
+                  post({ type: 'error', message: 'Clipboard is empty.' });
                 } else {
                   const cfg = await this.connectionManager.importFromEnv(folder, content);
-                  post({ type: 'info', message: `Импортировано подключение (${cfg.provider}).` });
+                  post({ type: 'info', message: `Connection imported (${cfg.provider}).` });
                 }
                 await sendState();
                 break;
               }
               if (msg.source === 'file') {
                 const uri = await vscode.window.showOpenDialog({
-                  title: 'Выберите .env файл',
+                  title: 'Select .env file',
                   canSelectFiles: true,
                   canSelectFolders: false,
                   canSelectMany: false,
-                  filters: { 'Env files': ['env'], 'Все файлы': ['*'] }
+                  filters: { 'Env files': ['env'], 'All files': ['*'] }
                 });
                 if (!uri || uri.length === 0) {
                   break;
@@ -111,7 +111,7 @@ export class SettingsWebview {
                 const buffer = await vscode.workspace.fs.readFile(uri[0]);
                 const content = Buffer.from(buffer).toString('utf8');
                 const cfg = await this.connectionManager.importFromEnv(folder, content);
-                post({ type: 'info', message: `Импортировано подключение (${cfg.provider}).` });
+                post({ type: 'info', message: `Connection imported (${cfg.provider}).` });
                 await sendState();
                 break;
               }
@@ -120,18 +120,18 @@ export class SettingsWebview {
             case 'exportEnv': {
               const env = await this.connectionManager.exportToEnv(folder);
               if (!env) {
-                post({ type: 'error', message: 'Подключение не настроено.' });
+                post({ type: 'error', message: 'Connection not configured.' });
               } else {
                 await vscode.env.clipboard.writeText(env);
-                post({ type: 'info', message: 'Экспортировано в .env и скопировано в буфер.' });
-                void vscode.window.showInformationMessage('Содержимое .env скопировано в буфер обмена.');
+                post({ type: 'info', message: 'Exported to .env and copied to clipboard.' });
+                void vscode.window.showInformationMessage('.env content copied to clipboard.');
               }
               post({ type: 'exportResult', env: env ?? undefined });
               break;
             }
             case 'pickSqliteFile': {
               const uri = await vscode.window.showOpenDialog({
-                title: 'Выберите файл базы SQLite',
+                title: 'Select SQLite database file',
                 canSelectFiles: true,
                 canSelectFolders: false,
                 canSelectMany: false
@@ -143,7 +143,7 @@ export class SettingsWebview {
             case 'saveGeneration': {
               const config = vscode.workspace.getConfiguration('sql-context', folder.uri);
               await config.update('outputPathTemplate', msg.outputPathTemplate, vscode.ConfigurationTarget.WorkspaceFolder);
-              void vscode.window.showInformationMessage('Шаблон пути для файла контекста сохранён.');
+              void vscode.window.showInformationMessage('Context file path template saved.');
               await sendState();
               break;
             }
@@ -153,7 +153,7 @@ export class SettingsWebview {
             }
             case 'testConnection': {
               await testConnection(msg.config);
-              post({ type: 'info', message: 'Подключение успешно.' });
+              post({ type: 'info', message: 'Connection successful.' });
               break;
             }
           }
