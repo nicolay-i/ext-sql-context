@@ -1,0 +1,68 @@
+{
+  "name": "sql-context-generator",
+  "displayName": "SQL Context Generator",
+  "description": "Generate markdown context files from SQL databases.",
+  "version": "0.0.1",
+  "publisher": "ext-sql-context",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:sql-context.configureConnection",
+    "onCommand:sql-context.generateContext",
+    "onCommand:sql-context.importConnectionFromEnv",
+    "onCommand:sql-context.exportConnectionToEnv"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "sql-context.configureConnection",
+        "title": "SQL Context: Configure Database Connection"
+      },
+      {
+        "command": "sql-context.generateContext",
+        "title": "SQL Context: Generate Context Markdown"
+      },
+      {
+        "command": "sql-context.importConnectionFromEnv",
+        "title": "SQL Context: Import Connection From .env"
+      },
+      {
+        "command": "sql-context.exportConnectionToEnv",
+        "title": "SQL Context: Export Connection To .env"
+      }
+    ],
+    "configuration": {
+      "title": "SQL Context Generator",
+      "properties": {
+        "sql-context.outputPathTemplate": {
+          "type": "string",
+          "default": "context/context-${isoDate}.md",
+          "description": "Default relative path for generated markdown files. Supports ${isoDate} placeholder."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^18.17.0",
+    "@types/pg": "^8.15.5",
+    "@types/vscode": "^1.74.0",
+    "tslib": "^2.6.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "mysql2": "^3.6.0",
+    "pg": "^8.11.3",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.6"
+  }
+}
