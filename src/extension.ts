@@ -33,8 +33,8 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('sql-context.generateContext', async () => {
-      const folder = await pickWorkspaceFolder();
+    vscode.commands.registerCommand('sql-context.generateContext', async (arg?: vscode.Uri | vscode.WorkspaceFolder) => {
+      const folder = await resolveWorkspaceFolder(arg);
       if (!folder) {
         vscode.window.showErrorMessage('Open a workspace folder before generating context.');
         return;
@@ -57,10 +57,7 @@ export function activate(context: vscode.ExtensionContext): void {
         return;
       }
 
-      const targetUri = await promptForOutputUri(folder);
-      if (!targetUri) {
-        return;
-      }
+      const targetUri = await getOutputUriFromTemplate(folder);
 
       try {
         const generator = new DatabaseContextGenerator(connection);
@@ -331,29 +328,15 @@ function getProviderDefaults(provider: 'postgres' | 'mysql'): { host: string; po
   return { host: 'localhost', port: 3306 };
 }
 
-async function promptForOutputUri(folder: vscode.WorkspaceFolder): Promise<vscode.Uri | undefined> {
+async function getOutputUriFromTemplate(folder: vscode.WorkspaceFolder): Promise<vscode.Uri> {
   const configuration = vscode.workspace.getConfiguration('sql-context', folder.uri);
   const template = configuration.get<string>('outputPathTemplate') ?? 'context/context-${isoDate}.md';
   const iso = new Date().toISOString();
   const safeIso = iso.replace(/[:]/g, '-').replace(/\./g, '-');
-  const defaultRelative = applyTemplate(template, safeIso, folder);
-
-  const input = await vscode.window.showInputBox({
-    title: 'Context file path',
-    prompt: 'Enter a relative or absolute path for the context markdown file.',
-    value: defaultRelative,
-    ignoreFocusOut: true
-  });
-
-  if (!input) {
-    return undefined;
-  }
-
-  const resolvedPath = applyTemplate(input, safeIso, folder);
+  const resolvedPath = applyTemplate(template, safeIso, folder);
   const absolutePath = path.isAbsolute(resolvedPath)
     ? resolvedPath
     : path.join(folder.uri.fsPath, resolvedPath);
-
   await ensureDirectory(path.dirname(absolutePath));
   return vscode.Uri.file(absolutePath);
 }
@@ -393,6 +376,21 @@ async function pickWorkspaceFolder(): Promise<vscode.WorkspaceFolder | undefined
     ignoreFocusOut: true
   });
   return selection ?? undefined;
+}
+
+async function resolveWorkspaceFolder(arg?: vscode.Uri | vscode.WorkspaceFolder): Promise<vscode.WorkspaceFolder | undefined> {
+  if (arg && 'uri' in arg && arg.uri) {
+    return arg as vscode.WorkspaceFolder;
+  }
+  if (arg && (arg as vscode.Uri).fsPath) {
+    const uri = arg as vscode.Uri;
+    const folders = vscode.workspace.workspaceFolders;
+    if (folders) {
+      const match = folders.find(f => uri.fsPath.startsWith(f.uri.fsPath));
+      if (match) return match;
+    }
+  }
+  return pickWorkspaceFolder();
 }
 
 async function promptForEnvContent(): Promise<string | undefined> {

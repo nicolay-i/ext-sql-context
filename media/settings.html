@@ -37,6 +37,7 @@
       font-size: 12px;
       opacity: .9;
       margin-top: 10px;
+      margin-bottom: 5px;
     }
 
     input[type="text"],
@@ -260,11 +261,33 @@
 <body>
   <div id="wsName" class="hint"></div>
   <div class="tabs" role="tablist">
-    <div class="tab active" data-tab="conn" role="tab" aria-selected="true">Настройки подключения</div>
-    <div class="tab" data-tab="gen" role="tab" aria-selected="false">Настройки генерации файла</div>
+    <div class="tab active" data-tab="gen" role="tab" aria-selected="true">Настройки генерации файла</div>
+    <div class="tab" data-tab="conn" role="tab" aria-selected="false">Настройки подключения</div>
   </div>
 
-  <div id="tab-conn" class="tab-content active" role="tabpanel" aria-labelledby="tab-conn">
+  <div id="tab-gen" class="tab-content active" role="tabpanel" aria-labelledby="tab-gen">
+    <div class="section">
+      <h3 style="margin-top:0">Генерация файла контекста</h3>
+      <div class="kv">
+        <label for="outTemplate">Шаблон пути</label>
+        <input id="outTemplate" type="text" class="mono" placeholder="context/context-${isoDate}.md" />
+        <div></div>
+        <div class="hint">Поддерживаются плейсхолдеры: ${isoDate}, ${date}, ${workspaceFolder},
+          ${workspaceName}</div>
+        <label>Предпросмотр</label>
+        <div id="outPreview" class="mono hint"></div>
+      </div>
+      <div class="actions">
+        <button id="saveGen" class="button-secondary">Сохранить настройки генерации</button>
+      </div>
+      <br>
+      <div class="actions">
+        <button id="startGen">Начать генерацию</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-conn" class="tab-content" role="tabpanel" aria-labelledby="tab-conn">
     <div class="section">
       <label>Провайдер</label>
       <select id="provider">
@@ -343,24 +366,6 @@
     </div>
   </div>
 
-  <div id="tab-gen" class="tab-content" role="tabpanel" aria-labelledby="tab-gen">
-    <div class="section">
-      <h3 style="margin-top:0">Генерация файла контекста</h3>
-      <div class="kv">
-        <label for="outTemplate">Шаблон пути</label>
-        <input id="outTemplate" type="text" class="mono" placeholder="context/context-${isoDate}.md" />
-        <div></div>
-        <div class="hint">Поддерживаются плейсхолдеры: ${'{'}isoDate{'}'}, ${'{'}date{'}'}, ${'{'}workspaceFolder{'}'},
-          ${'{'}workspaceName{'}'}</div>
-        <label>Предпросмотр</label>
-        <div id="outPreview" class="mono hint"></div>
-      </div>
-      <div class="actions">
-        <button id="saveGen">Сохранить настройки генерации</button>
-      </div>
-    </div>
-  </div>
-
   <script nonce="{{nonce}}">
     const vscode = acquireVsCodeApi();
 
@@ -396,6 +401,7 @@
       outTemplate: document.getElementById('outTemplate'),
       outPreview: document.getElementById('outPreview'),
       saveGen: document.getElementById('saveGen'),
+      startGen: document.getElementById('startGen'),
       unsaved: document.getElementById('unsaved'),
     };
     // Collapsible: .env import section
@@ -423,18 +429,29 @@
     });
 
     // Tabs
+    function switchTab(tabId) {
+      els.tabs.forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      const tab = document.querySelector(`.tab[data-tab="${tabId}"]`);
+      if (tab) {
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+      }
+      if (tabId === 'conn') {
+        els.tabConn.classList.add('active');
+        els.tabGen.classList.remove('active');
+      } else {
+        els.tabGen.classList.add('active');
+        els.tabConn.classList.remove('active');
+      }
+    }
+
     els.tabs.forEach(tab => {
       tab.addEventListener('click', () => {
-        els.tabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
         const id = tab.getAttribute('data-tab');
-        if (id === 'conn') {
-          els.tabConn.classList.add('active');
-          els.tabGen.classList.remove('active');
-        } else {
-          els.tabGen.classList.add('active');
-          els.tabConn.classList.remove('active');
-        }
+        switchTab(id);
       });
     });
 
@@ -549,6 +566,11 @@
       vscode.postMessage({ type: 'saveGeneration', outputPathTemplate });
     });
 
+    // Start generation using current template
+    els.startGen.addEventListener('click', () => {
+      vscode.postMessage({ type: 'startGeneration' });
+    });
+
     els.importClipboard.addEventListener('click', () => {
       vscode.postMessage({ type: 'importEnv', source: 'clipboard' });
     });
@@ -563,7 +585,7 @@
     window.addEventListener('message', event => {
       const msg = event.data;
       if (msg.type === 'state') {
-        els.wsName.textContent = 'Рабочая папка: ' + msg.workspaceName;
+        els.wsName.textContent = '';
         // Generation settings
         if (msg.outputPathTemplate) els.outTemplate.value = msg.outputPathTemplate;
         els.outPreview.textContent = msg.outputPathPreview || '';
@@ -594,6 +616,7 @@
         // Set last saved config to reflect current state from backend
         lastSavedConfig = collectConfig();
         updateDirty();
+        switchTab('gen');
       } else if (msg.type === 'info') {
         setStatus('info', msg.message);
       } else if (msg.type === 'error') {

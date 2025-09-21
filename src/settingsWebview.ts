@@ -13,7 +13,8 @@ type InMessage =
   | { type: 'exportEnv' }
   | { type: 'pickSqliteFile' }
   | { type: 'saveGeneration'; outputPathTemplate: string }
-  | { type: 'testConnection'; config: ConnectionConfig };
+  | { type: 'testConnection'; config: ConnectionConfig }
+  | { type: 'startGeneration' };
 
 type OutMessage =
   | { type: 'state'; connection?: ConnectionConfig; workspaceName: string; outputPathTemplate: string; outputPathPreview: string }
@@ -144,6 +145,10 @@ export class SettingsWebview {
               await config.update('outputPathTemplate', msg.outputPathTemplate, vscode.ConfigurationTarget.WorkspaceFolder);
               void vscode.window.showInformationMessage('Шаблон пути для файла контекста сохранён.');
               await sendState();
+              break;
+            }
+            case 'startGeneration': {
+              await vscode.commands.executeCommand('sql-context.generateContext', folder);
               break;
             }
             case 'testConnection': {
