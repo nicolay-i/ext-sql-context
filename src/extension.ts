@@ -4,18 +4,31 @@ import * as vscode from 'vscode';
 import { ConnectionManager } from './connectionManager';
 import { DatabaseContextGenerator } from './contextGenerator';
 import { ConnectionConfig } from './types';
+import { SettingsWebview } from './settingsWebview';
 
 export function activate(context: vscode.ExtensionContext): void {
   const connectionManager = new ConnectionManager(context);
+  const settingsWebview = new SettingsWebview(context, connectionManager);
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('sql-context.openSettings', async () => {
+      const folder = await pickWorkspaceFolder();
+      if (!folder) {
+        vscode.window.showErrorMessage('Open a workspace folder to manage SQL Context settings.');
+        return;
+      }
+      settingsWebview.show(folder);
+    })
+  );
 
   context.subscriptions.push(
     vscode.commands.registerCommand('sql-context.configureConnection', async () => {
       const folder = await pickWorkspaceFolder();
       if (!folder) {
+        vscode.window.showErrorMessage('Open a workspace folder to manage SQL Context settings.');
         return;
       }
-      const existing = await connectionManager.getConnection(folder);
-      await configureConnection(folder, connectionManager, existing);
+      settingsWebview.show(folder);
     })
   );
 
@@ -319,7 +332,7 @@ function getProviderDefaults(provider: 'postgres' | 'mysql'): { host: string; po
 }
 
 async function promptForOutputUri(folder: vscode.WorkspaceFolder): Promise<vscode.Uri | undefined> {
-  const configuration = vscode.workspace.getConfiguration('sql-context');
+  const configuration = vscode.workspace.getConfiguration('sql-context', folder.uri);
   const template = configuration.get<string>('outputPathTemplate') ?? 'context/context-${isoDate}.md';
   const iso = new Date().toISOString();
   const safeIso = iso.replace(/[:]/g, '-').replace(/\./g, '-');

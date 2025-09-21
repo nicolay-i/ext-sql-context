@@ -14,7 +14,8 @@
     "onCommand:sql-context.configureConnection",
     "onCommand:sql-context.generateContext",
     "onCommand:sql-context.importConnectionFromEnv",
-    "onCommand:sql-context.exportConnectionToEnv"
+    "onCommand:sql-context.exportConnectionToEnv",
+    "onCommand:sql-context.openSettings"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -22,6 +23,10 @@
       {
         "command": "sql-context.configureConnection",
         "title": "SQL Context: Configure Database Connection"
+      },
+      {
+        "command": "sql-context.openSettings",
+        "title": "SQL Context: Open Settings"
       },
       {
         "command": "sql-context.generateContext",
@@ -41,6 +46,7 @@
       "properties": {
         "sql-context.outputPathTemplate": {
           "type": "string",
+          "scope": "resource",
           "default": "context/context-${isoDate}.md",
           "description": "Default relative path for generated markdown files. Supports ${isoDate} placeholder."
         }
